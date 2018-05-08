@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__.'functions.php';
+require_once __DIR__.'/functions.php';
 
 //создаем подключение к базе данных
 $dataBaseTasks = new PDO('mysql:dbname=global;host=localhost;charset=UTF8', 'mpustovit', 'neto1714');
@@ -43,10 +43,10 @@ $newTaskAction = newTaskAction();
         $newTask->bindValue(':description', $newTaskDescription);
         $newTask->exec();
     } elseif ($newTaskAction['action'] = 'doTask') {
-        $newTaskAction->bindValue(':id', $newTaskAction['id'];);
+        $newTaskAction->bindValue(':id', $newTaskAction['id']);
         $doTask->exec();
     } elseif ($newTaskAction['action'] = 'deleteTask') {
-        $newTaskAction->bindValue(':id', $newTaskAction['id'];);
+        $newTaskAction->bindValue(':id', $newTaskAction['id']);
         $deleteTask->exec();
     } else {
         $transaction = false;

@@ -2,7 +2,8 @@
 
 function taskRead($tasksQuery)
 {
-    $taskArray = fetch($tasksQuery->exec());
+    $tasksQuery->exec();
+    $taskArray = $tasksQuery->fetch();
     return $taskArray;
 }
 
@@ -27,3 +28,4 @@ function newTaskAction()
             return preg_replace("/[^a-zA-Z0-9\s]/", "", $_GET);
         }
     }
+}
