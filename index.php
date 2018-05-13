@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__.'/functions.php';
+require_once __DIR__ . '/functions.php';
 
 //создаем подключение к базе данных
 $dataBaseTasks = new PDO('mysql:dbname=global;host=localhost;charset=UTF8', 'mpustovit', 'neto1714');
@@ -14,55 +14,45 @@ try {
                           `is_done` tinyint(4) NOT NULL DEFAULT '0',
                           `date_added` datetime NOT NULL,
                           PRIMARY KEY(`id`)
-                          ) ENGINE = InnoDB DEFAULT CHARSET = utf8;
-                          
-                          INSERT INTO 'tasks' VALUE (NULL, 'Создать свою первую задачу')");
-
-//отобразить задачи
-    $tasksQuery = $dataBaseTasks->prepare("SELECT id, description, is_done, date_added FROM tasks");
-
-    $taskRead = taskRead($tasksQuery);
-
-//Добавить задачу в базу
-    $newTask = $dataBaseTasks->prepare('INSERT INTO tasks(description) value description=":description"');
-
-//Выполнить задачу
-    $doTask = $dataBaseTasks->prepare('UPDATE tasks SET is_done=1 WHERE id=:id');
-
-//Удалить задачу
-    $deleteTask = $dataBaseTasks->prepare("DELETE FROM tasks WHERE id=:id");
-
-$newTaskDescription = newTaskDescription();
-$newTaskAction = newTaskAction();
-
-    $transaction = true;
-
-    $dataBaseTasks->beginTransaction();
-
-    if ($newTaskDescription) {
-        $newTask->bindValue(':description', $newTaskDescription);
-        $newTask->exec();
-    } elseif ($newTaskAction['action'] = 'doTask') {
-        $newTaskAction->bindValue(':id', $newTaskAction['id']);
-        $doTask->exec();
-    } elseif ($newTaskAction['action'] = 'deleteTask') {
-        $newTaskAction->bindValue(':id', $newTaskAction['id']);
-        $deleteTask->exec();
-    } else {
-        $transaction = false;
-    }
-
-    if ($transaction) {
-        $dataBaseTasks->commit();
-        echo 'Задача успешно добавлена.';
-    } else {
-        $dataBaseTasks->rollBack();
-        echo 'задача "' . $newTaskDescription . '"" не добавилась, попробуйте еще раз.';
-    }
-
+                          ) ENGINE = InnoDB DEFAULT CHARSET = utf8;");
 } catch (PDOException $e) {
     die("Error: " . $e->getMessage());
 }
+
+$taskArray = taskRead($dataBaseTasks);
+
+if(newTaskAction()) {
+    $newTaskAction = newTaskAction();
+    $description = $newTaskAction(['id']);
+}
+
+if(newTaskAction()) {
+    $newTaskDescription = newTaskAction();
+    $id = $newTaskAction(['description']);
+}
+
+$transaction = true;
+
+$dataBaseTasks->beginTransaction();
+
+if ($newTaskDescription) {
+    addTask($description);
+} elseif ($newTaskAction['action'] = 'doTask') {
+    doTask($id);
+} elseif ($newTaskAction['action'] = 'deleteTask') {
+    deleteTask($id);
+} else {
+    $transaction = false;
+}
+
+if ($transaction) {
+    $dataBaseTasks->commit();
+    echo 'Задача успешно добавлена.';
+} else {
+    $dataBaseTasks->rollBack();
+    echo 'задача "' . $newTaskDescription . '"" не добавилась, попробуйте еще раз.';
+}
+
 
 ?>
 
@@ -102,7 +92,7 @@ $newTaskAction = newTaskAction();
     <tbody>
     <?php
     //читаем и выводим задачи построчно
-    foreach ($taskRead as $task) : ?>
+    foreach ($taskArray as $task) : ?>
         <tr>
             <?php $id = $task['id'] ?>
             //Задача
@@ -124,7 +114,6 @@ $newTaskAction = newTaskAction();
     </tbody>
 </table>
 <h2>Код приложения</h2>
-<ul>
-    <a href="https://github.com/Kinkreux/dzBD2" target="_blank">Открыть в новом окне репозиторий на Github</a>
+<a href="https://github.com/Kinkreux/dzBD2" target="_blank">Открыть в новом окне репозиторий на Github</a>
 </body>
 </html>

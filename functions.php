@@ -1,11 +1,45 @@
 <?php
 
-function taskRead($tasksQuery)
+
+//отобразить задачи
+function taskRead($dataBaseTasks)
 {
-    $tasksQuery->exec();
-    $taskArray = $tasksQuery->fetch();
+    $tasksList = $dataBaseTasks->query("SELECT id, description, is_done, date_added FROM tasks");
+    if(!$tasksList) {
+        echo 'Ошибка запроса к базе';
+    } else {
+        $taskArray = $tasksList->fetch();
+    }
     return $taskArray;
 }
+
+//Добавить задачу в базу
+function addTask($description)
+{
+    $addTask = $dataBaseTasks->prepare('INSERT INTO tasks(description) value (description=:description)');
+    $addTask->bindValue(':description', $description);
+    $newTask = $addTask->exec();
+    return $newTask;
+}
+
+//Выполнить задачу
+function doTask($id)
+{
+    $doTask = $dataBaseTasks->prepare('UPDATE tasks SET is_done=1 WHERE id=:id');
+    $doTask->bindParam(':id', $id);
+    $doTask = $doTask->exec();
+    return $doTask;
+}
+
+//Удалить задачу
+function deleteTask($id)
+{
+    $deleteTask = $dataBaseTasks->prepare("DELETE FROM tasks WHERE id=:id");
+    $doTask->bindParam(':id', $id);
+    $deleteTask->exec();
+    return $deleteTask;
+}
+
 
 //обработка формы
 function newTaskDescription()
@@ -29,3 +63,4 @@ function newTaskAction()
         }
     }
 }
+
