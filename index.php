@@ -2,11 +2,11 @@
 require_once __DIR__ . '/functions.php';
 
 //создаем подключение к базе данных
-$dataBaseTasks = new PDO('mysql:dbname=global;host=localhost;charset=UTF8', 'mpustovit', 'neto1714');
+$dataBaseTasks = new PDO('mysql:dbname=mpustovit;host=localhost;charset=UTF8', 'mpustovit', 'neto1714');
 
-//дамп создания базы
-try {
-    $dataBaseTasks->exec(
+//дамп создания базы; она уже 1 раз создана, так что закомментирована
+/*try {
+    $test = $dataBaseTasks->exec(
         "DROP TABLE IF EXISTS `tasks`;
                           CREATE TABLE `tasks` (
                           `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -17,43 +17,27 @@ try {
                           ) ENGINE = InnoDB DEFAULT CHARSET = utf8;");
 } catch (PDOException $e) {
     die("Error: " . $e->getMessage());
+}*/
+
+if (array_key_exists('action', $_GET) or array_key_exists('id', $_GET)) {
+    $actionArray = newTaskAction();
+    $id = $actionArray['id'];
+    $action = $actionArray['action'];
+    if ($action = 'doTask') {
+        doTask($id, $dataBaseTasks);
+    } elseif ($action = 'deleteTask') {
+        deleteTask($id, $dataBaseTasks);
+    } else echo 'Действие не определено.';
 }
 
-$taskArray = taskRead($dataBaseTasks);
-
-if(newTaskAction()) {
-    $newTaskAction = newTaskAction();
-    $description = $newTaskAction(['id']);
+if (array_key_exists('description', $_POST)) {
+    $description = newTaskDescription();
+    newTask($description, $dataBaseTasks);
 }
 
-if(newTaskAction()) {
-    $newTaskDescription = newTaskAction();
-    $id = $newTaskAction(['description']);
-}
-
-$transaction = true;
-
-$dataBaseTasks->beginTransaction();
-
-if ($newTaskDescription) {
-    addTask($description);
-} elseif ($newTaskAction['action'] = 'doTask') {
-    doTask($id);
-} elseif ($newTaskAction['action'] = 'deleteTask') {
-    deleteTask($id);
-} else {
-    $transaction = false;
-}
-
-if ($transaction) {
-    $dataBaseTasks->commit();
-    echo 'Задача успешно добавлена.';
-} else {
-    $dataBaseTasks->rollBack();
-    echo 'задача "' . $newTaskDescription . '"" не добавилась, попробуйте еще раз.';
-}
-
-
+//создаем массив задач
+$tasksArray = $dataBaseTasks->query("SELECT id, description, is_done, date_added FROM tasks");
+$tasksArray = $tasksArray->fetchAll();
 ?>
 
 <html>
@@ -65,7 +49,7 @@ if ($transaction) {
         }
 
         body {
-            max-width: 550px;
+            max-width: 700px;
             margin-left: 15%;
         }
 
@@ -92,23 +76,25 @@ if ($transaction) {
     <tbody>
     <?php
     //читаем и выводим задачи построчно
-    foreach ($taskArray as $task) : ?>
+    foreach ($tasksArray as $task) : ?>
         <tr>
-            <?php $id = $task['id'] ?>
-            //Задача
-            <td><?php $description = $task['description'];
-                echo $description ?></td>
-            //статус: сделано / не сделано
-            <td><?php $doneTask = $task['is_done'];
-                if ($doneTask) echo 'Да';
-                echo 'Нет' ?></td>
-            //дата создания задачи
-            <td><?php $dateTask = $task['date_added'];
-                echo $dateTask ?></td>
-            //выполнить задачу
-            <td><?php echo '<a href="?' . $id . '&action=doTask>' ?></td>
-            //удалить задачу
-            <td><?php echo '<a href="?' . $id . '&action=deleteTask' ?></td>
+            <?php  //id
+            $id = $task['id'] ?>
+            <td><?php //Задача
+                echo $task['description'] ?></td>
+            <td><?php  //статус: сделано / не сделано
+                if ($task['is_done']) {
+                    echo 'Да';
+                } else {
+                echo 'Нет';
+                };
+                ?></td>
+            <td><?php  //дата создания задачи
+                echo date('d.m.Y H:i', strtotime($task['date_added'])) ?></td>
+            <td><?php //выполнить задачу
+                echo '<a href="?id='.$id.'&action=doTask">'.'Выполнить</a>'?></td>
+            <td><?php //удалить задачу
+                echo '<a href="?id=' . $id . '&action=deleteTask">'.'Удалить</a>' ?></td>
         </tr>
     <?php endforeach; ?>
     </tbody>

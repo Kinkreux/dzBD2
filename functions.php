@@ -1,43 +1,22 @@
 <?php
-
-
-//отобразить задачи
-function taskRead($dataBaseTasks)
-{
-    $tasksList = $dataBaseTasks->query("SELECT id, description, is_done, date_added FROM tasks");
-    if(!$tasksList) {
-        echo 'Ошибка запроса к базе';
-    } else {
-        $taskArray = $tasksList->fetch();
-    }
-    return $taskArray;
-}
-
 //Добавить задачу в базу
-function addTask($description)
+function newTask($description, $dataBaseTasks)
 {
-    $addTask = $dataBaseTasks->prepare('INSERT INTO tasks(description) value (description=:description)');
-    $addTask->bindValue(':description', $description);
-    $newTask = $addTask->exec();
-    return $newTask;
+    $time = new DateTime('now');
+    $time = date_format($time, 'Y-m-d H:i:s');
+    $dataBaseTasks->exec("INSERT INTO tasks(description, date_added) value ('".$description."', '".$time."')");
 }
 
 //Выполнить задачу
-function doTask($id)
+function doTask($id, $dataBaseTasks)
 {
-    $doTask = $dataBaseTasks->prepare('UPDATE tasks SET is_done=1 WHERE id=:id');
-    $doTask->bindParam(':id', $id);
-    $doTask = $doTask->exec();
-    return $doTask;
+        $dataBaseTasks->exec("UPDATE tasks(is_done) SET VALUE(1) WHERE id = '.$id.'");
 }
 
 //Удалить задачу
-function deleteTask($id)
+function deleteTask($id, $dataBaseTasks)
 {
-    $deleteTask = $dataBaseTasks->prepare("DELETE FROM tasks WHERE id=:id");
-    $doTask->bindParam(':id', $id);
-    $deleteTask->exec();
-    return $deleteTask;
+    $dataBaseTasks->exec("DELETE * FROM tasks WHERE id='.$id.'");
 }
 
 
@@ -45,10 +24,11 @@ function deleteTask($id)
 function newTaskDescription()
 {
     if (isset($_POST)) {
-        if (!array_key_exists($_POST, $_POST['description'])) {
+        if (!array_key_exists('description', $_POST)) {
             echo 'Введите простое текстовое описание задачи длиной не более 255 символов.';
         } else {
-            return preg_replace("/[^a-zA-Z0-9\s]/", "", $_POST);
+            $description = htmlspecialchars($_POST['description']);
+            return $description;
         }
     }
 }
@@ -56,11 +36,17 @@ function newTaskDescription()
 function newTaskAction()
 {
     if (isset($_GET)) {
-        if (!array_key_exists($_GET, $_GET['action'] or $_GET['id'])) {
+        if (!array_key_exists('action', $_GET)) {
             echo 'Ошибка: действие неопределено. Не получилось выполнить или удалить задачу.';
-        } else {
-            return preg_replace("/[^a-zA-Z0-9\s]/", "", $_GET);
+        } elseif(!array_key_exists('id', $_GET)) {
+            echo 'Ошибка: действие неопределено. Не получилось выполнить или удалить задачу.';
+        }else {
+            foreach ($_GET as $get)
+            (
+                htmlspecialchars($get)
+            );
+            $actionArray = $_GET;
+            return $actionArray;
         }
     }
 }
-
